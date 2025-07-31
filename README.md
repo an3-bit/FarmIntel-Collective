@@ -1,73 +1,207 @@
-# Welcome to your Lovable project
+# Climate-Smart Soil Advisor 🌱
 
-## Project info
+A modern, AI-powered farming application that helps farmers optimize their agricultural practices through intelligent crop recommendations, soil analysis, and weather forecasting.
 
-**URL**: https://lovable.dev/projects/29c36e47-25a7-4b74-8a2a-7a1fe59d1457
+## 🌟 Features
 
-## How can I edit this code?
+### Core Functionality
+- **AI-Powered Crop Recommendations** - Get intelligent suggestions for the best crops to plant based on soil composition and local climate
+- **Advanced Soil Analysis** - Upload soil test results or get AI predictions for NPK levels, pH balance, and soil health indicators
+- **Weather Forecasting & Alerts** - 7-day weather predictions with rainfall alerts, temperature forecasts, and planting recommendations
+- **Yield Analytics & Insights** - Track farm performance with detailed analytics, yield predictions, and actionable insights
 
-There are several ways of editing your application.
+### User Experience
+- **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
+- **Interactive Dashboard** - Real-time data visualization and monitoring
+- **Authentication System** - Secure sign-in and sign-up with email/password
+- **Modern UI/UX** - Beautiful, intuitive interface built with modern design principles
 
-**Use Lovable**
+## 🚀 Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/29c36e47-25a7-4b74-8a2a-7a1fe59d1457) and start prompting.
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn package manager
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. **Clone the repository**
+   ```bash
+   git clone <your-repository-url>
+   cd yield-wise-aid
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-Follow these steps:
+4. **Open your browser**
+   Navigate to `http://localhost:8081` (or the port shown in your terminal)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Available Scripts
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🏗️ Project Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── AuthModal.tsx   # Authentication modal
+│   ├── Hero.tsx        # Landing page hero section
+│   └── Navigation.tsx  # Navigation component
+├── pages/              # Page components
+│   ├── Dashboard.tsx   # Main dashboard
+│   ├── Index.tsx       # Home page
+│   ├── LearnMore.tsx   # Features page
+│   ├── SignIn.tsx      # Sign-in page
+│   └── NotFound.tsx    # 404 page
+├── lib/                # Utility functions
+├── hooks/              # Custom React hooks
+├── App.tsx             # Main app component
+└── main.tsx            # Application entry point
 ```
 
-**Edit a file directly in GitHub**
+## 🛠️ Technology Stack
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Frontend
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe JavaScript development
+- **Vite** - Fast build tool and development server
+- **React Router** - Client-side routing
 
-**Use GitHub Codespaces**
+### UI/UX
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful, accessible UI components
+- **Lucide React** - Beautiful icons
+- **Sonner** - Toast notifications
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### State Management
+- **React Query (TanStack Query)** - Server state management
+- **React Hooks** - Local state management
 
-## What technologies are used for this project?
+### Development Tools
+- **ESLint** - Code linting
+- **TypeScript** - Static type checking
+- **Vite** - Build tool and dev server
 
-This project is built with:
+## 🎨 Design System
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The application uses a comprehensive design system built on:
+- **Color Palette**: Green and emerald tones representing agriculture and growth
+- **Typography**: Clean, readable fonts with proper hierarchy
+- **Components**: Consistent, reusable UI components
+- **Animations**: Smooth transitions and micro-interactions
+- **Responsive Design**: Mobile-first approach
 
-## How can I deploy this project?
+## 📱 Pages & Features
 
-Simply open [Lovable](https://lovable.dev/projects/29c36e47-25a7-4b74-8a2a-7a1fe59d1457) and click on Share -> Publish.
+### Landing Page (`/`)
+- Hero section with rotating background images
+- Welcome message and key features overview
+- Call-to-action buttons for sign-up and learn more
+- Trust indicators and statistics
 
-## Can I connect a custom domain to my Lovable project?
+### Sign-In Page (`/signin`)
+- Clean authentication interface
+- Email and password fields
+- Show/hide password functionality
+- Loading states and validation
 
-Yes, you can!
+### Dashboard (`/dashboard`)
+- Dark sidebar navigation
+- Soil data visualization
+- Crop recommendations
+- Weather alerts and forecasts
+- Soil improvement suggestions
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Learn More (`/learn-more`)
+- Comprehensive feature explanations
+- User testimonials
+- Statistics and social proof
+- Call-to-action sections
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔐 Authentication
+
+The application includes a complete authentication system:
+- **Sign In/Sign Up Modal** - Toggle between authentication modes
+- **Form Validation** - Client-side validation with proper error handling
+- **Loading States** - Visual feedback during authentication
+- **Responsive Design** - Works on all device sizes
+
+## 🎯 Key Features in Detail
+
+### AI-Powered Insights
+- Machine learning algorithms for crop recommendations
+- Soil health analysis and predictions
+- Weather pattern recognition
+- Yield optimization suggestions
+
+### Real-time Data
+- Live weather updates
+- Soil monitoring
+- Crop health tracking
+- Performance analytics
+
+### User Experience
+- Intuitive navigation
+- Fast loading times
+- Smooth animations
+- Accessible design
+
+## 🌐 Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## 📦 Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Deploy Options
+- **Vercel** - Recommended for React applications
+- **Netlify** - Great for static sites
+- **GitHub Pages** - Free hosting for public repositories
+- **AWS S3 + CloudFront** - Scalable cloud hosting
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Pexels** - Beautiful farming and agricultural images
+- **shadcn/ui** - Excellent UI component library
+- **Lucide** - Beautiful icon set
+- **Tailwind CSS** - Amazing utility-first CSS framework
+
+## 📞 Support
+
+For support, please open an issue in the GitHub repository or contact the development team.
+
+---
+
+**Built with ❤️ for modern agriculture**
