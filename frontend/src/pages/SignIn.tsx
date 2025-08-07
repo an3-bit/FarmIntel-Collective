@@ -28,7 +28,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md">
         <Card className="shadow-xl border-0">
           <CardHeader className="text-center pb-6">
@@ -37,10 +37,10 @@ const SignIn = () => {
                 <Sprout className="w-8 h-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-foreground">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-foreground">
               Climate-Smart Soil Advisor
             </CardTitle>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
               Sign in to access your farming dashboard
             </p>
           </CardHeader>

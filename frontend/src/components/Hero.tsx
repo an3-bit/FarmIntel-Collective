@@ -53,61 +53,54 @@ const Hero = () => {
         </div>
         
         <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-4xl mx-auto px-6 w-full text-center">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 w-full text-center">
             {/* Welcome Badge */}
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Sprout className="w-4 h-4 text-green-300" />
-              <span className="text-white text-sm font-medium">Welcome to Your Climate-Smart Soil Advisor</span>
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-2 mb-4 sm:mb-6 mx-4 sm:mx-0">
+              <Sprout className="w-4 h-4 text-green-300 flex-shrink-0" />
+              <span className="text-white text-xs sm:text-sm font-medium text-center">Welcome to Your Climate-Smart Soil Advisor</span>
             </div>
 
             {/* Main Heading */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 drop-shadow-lg">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg leading-tight">
               Smart Farming for
               <span className="block text-accent drop-shadow-lg"> Better Yields</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xl text-white/95 mb-8 max-w-2xl mx-auto drop-shadow-md">
+            <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto drop-shadow-md px-4 sm:px-0">
               Get personalized crop recommendations, soil analysis, and weather forecasts 
               to maximize your harvest and optimize your farming decisions.
             </p>
 
             {/* Key Features */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-              <div className="flex items-center justify-center gap-2 text-white/90">
-                <CheckCircle className="w-5 h-5 text-green-300" />
-                <span className="text-sm">AI-Powered Insights</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8 max-w-2xl mx-auto px-4 sm:px-0">
+              <div className="flex items-center justify-center gap-2 text-white/90 py-1">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-300 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">AI-Powered Insights</span>
               </div>
-              <div className="flex items-center justify-center gap-2 text-white/90">
-                <Cloud className="w-5 h-5 text-blue-300" />
-                <span className="text-sm">Weather Forecasts</span>
+              <div className="flex items-center justify-center gap-2 text-white/90 py-1">
+                <Cloud className="w-4 h-4 sm:w-5 sm:h-5 text-blue-300 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Weather Forecasts</span>
               </div>
-              <div className="flex items-center justify-center gap-2 text-white/90">
-                <Droplets className="w-5 h-5 text-cyan-300" />
-                <span className="text-sm">Soil Analysis</span>
+              <div className="flex items-center justify-center gap-2 text-white/90 py-1">
+                <Droplets className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">Soil Analysis</span>
               </div>
             </div>
 
             {/* Call to Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 px-4 sm:px-0">
               <Button 
                 size="lg" 
-                className="bg-white text-primary hover:bg-white/90 px-8 py-4 text-lg font-semibold shadow-lg"
+                className="bg-white text-primary hover:bg-white/90 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold shadow-lg w-full sm:w-auto"
                 onClick={handleGetStarted}
               >
                 Get Started Free
               </Button>
-              {/* <Button 
-                size="lg" 
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold shadow-lg"
-                onClick={handleGetStarted}
-              >
-                Sign Up Now
-              </Button> */}
               <Button 
                 size="lg" 
                 variant="default" 
-                className="border-white text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold backdrop-blur-sm"
+                className="border-white text-white hover:bg-white/10 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold backdrop-blur-sm w-full sm:w-auto"
                 onClick={handleLearnMore}
               >
                 Learn More
@@ -115,18 +108,18 @@ const Hero = () => {
             </div>
 
             {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center gap-6 text-white/80">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm">50,000+ Farmers Trust Us</span>
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-6 text-white/80 px-4 sm:px-0">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                <span className="text-xs sm:text-sm">50,000+ Farmers Trust Us</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm">95% Weather Accuracy</span>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                <span className="text-xs sm:text-sm">95% Weather Accuracy</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm">24/7 AI Support</span>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                <span className="text-xs sm:text-sm">24/7 AI Support</span>
               </div>
             </div>
           </div>
