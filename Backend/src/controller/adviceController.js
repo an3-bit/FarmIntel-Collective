@@ -1,5 +1,5 @@
 const axios = require('axios');
-const Advice = require('.../models/advice');
+const Advice = require('../models/advice');
 const KNN = require('ml-knn');
 
 // Mock dataset from Excel
@@ -36,6 +36,10 @@ exports.getAdvice = async (req, res) => {
   try {
     const { lat, lon, crop, userId } = req.body;
 
+    if (!lat || !lon || !crop || !userId) {
+      return res.status(400).json({ message: 'Missing required fields: lat, lon, crop, or userId' });
+    }
+
     // KNN model for interpolation
     const knn = new KNN(dataset.map(d => [d.lat, d.lon]), dataset.map(d => [d.ph, d.n, d.p, d.k]), {
       k: 3,
@@ -49,8 +53,8 @@ exports.getAdvice = async (req, res) => {
 
     // Generate recommendations
     const recommendations = {
-      crop: crop || 'maize',
-      soil: predictedPh < 7 ? `Apply 200 kg/ha of lime to neutralize acidic soil for ${crop || 'maize'}. ` : 'Soil pH is suitable for maize. ',
+      crop: crop.toLowerCase(),
+      soil: predictedPh < 7 ? `Apply 200 kg/ha of lime to neutralize acidic soil for ${crop}. ` : `Soil pH is suitable for ${crop}. `,
       weather: 'Expect moderate rainfall this week',
     };
 
@@ -60,6 +64,10 @@ exports.getAdvice = async (req, res) => {
 
     // Fetch weather data from OpenWeatherMap
     const weatherApiKey = process.env.OPENWEATHER_API_KEY;
+    if (!weatherApiKey) {
+      throw new Error('OPENWEATHER_API_KEY is not configured');
+    }
+
     const weatherData = {};
     const cities = [
       { name: 'Kakamega', lat: 0.2827, lon: 34.7519 },
@@ -85,9 +93,9 @@ exports.getAdvice = async (req, res) => {
       longitude: lon,
       soilData: {
         ph: predictedPh.toFixed(1),
-        n: predictedN.toFixed(0),
-        p: predictedP.toFixed(0),
-        k: predictedK.toFixed(0),
+        n: Math.round(predictedN),
+        p: Math.round(predictedP),
+        k: Math.round(predictedK),
       },
       recommendations,
       totalRain: weatherData[county.toLowerCase()].rainfall.split(' ')[0],
@@ -96,7 +104,7 @@ exports.getAdvice = async (req, res) => {
 
     // Save to MySQL
     await Advice.create({
-      userId: userId || 'default_user',
+      userId,
       county,
       latitude: lat,
       longitude: lon,
@@ -108,13 +116,14 @@ exports.getAdvice = async (req, res) => {
       recommendations_soil: adviceData.recommendations.soil,
       recommendations_weather: adviceData.recommendations.weather,
       totalRain: adviceData.totalRain,
-      weatherData_kakamega: adviceData.weatherData.kakamega,
-      weatherData_siaya: adviceData.weatherData.siaya,
-      weatherData_nairobi: adviceData.weatherData.nairobi,
+      weatherData_kakamega: JSON.stringify(adviceData.weatherData.kakamega),
+      weatherData_siaya: JSON.stringify(adviceData.weatherData.siaya),
+      weatherData_nairobi: JSON.stringify(adviceData.weatherData.nairobi),
     });
 
     res.status(200).json(adviceData);
   } catch (error) {
+    console.error('Error in getAdvice:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -122,12 +131,16 @@ exports.getAdvice = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
     const history = await Advice.findAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
     });
     res.status(200).json(history);
   } catch (error) {
+    console.error('Error in getProfile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

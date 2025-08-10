@@ -11,5 +11,14 @@
   "description": "",
   "devDependencies": {
     "nodemon": "^3.1.10"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "ml-knn": "^3.0.0",
+    "mysql2": "^3.14.3",
+    "sequelize": "^6.37.7"
   }
 }
