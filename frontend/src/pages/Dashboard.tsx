@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  FileText, 
+import {
+  LayoutDashboard,
+  BarChart3,
+  FileText,
   Settings,
   CheckCircle,
   AlertTriangle,
   Wrench,
-  History
+  History,
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -34,7 +34,7 @@ const Dashboard = () => {
     "Beans",
     "Peas",
     "Lentils",
-    "Groundnuts"
+    "Groundnuts",
   ];
 
   const handleSignOut = () => {
@@ -43,56 +43,60 @@ const Dashboard = () => {
 
   const getLocationAndAdvice = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
 
-        setLoading(true);
-        setError("");
+          setLoading(true);
+          setError("");
 
-        try {
-          const response = await fetch('http://localhost:5000/api/advice', { // Adjust URL to match backend
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ lat, lon, crop: selectedCrop, userId }),
-          });
+          try {
+            const response = await fetch("http://localhost:3000/api/advice", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ lat, lon, crop: selectedCrop, userId }),
+            });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch advice');
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Failed to fetch advice from server");
+            }
+
+            const data = await response.json();
+            // Defensive checks for API response
+            setCounty(data.county || "");
+            setSoilData(data.soilData || { ph: "", n: "", p: "", k: "" });
+            setRecommendations(data.recommendations || { crop: "", soil: "", weather: "" });
+            setTotalRain(data.totalRain || 0);
+            setWeatherData(data.weatherData || { kakamega: null, siaya: null, nairobi: null });
+          } catch (err) {
+            setError(`Error fetching advice: ${err.message}. Please try again.`);
+          } finally {
+            setLoading(false);
           }
-
-          const data = await response.json();
-          setCounty(data.county);
-          setSoilData(data.soilData);
-          setRecommendations(data.recommendations);
-          setTotalRain(data.totalRain);
-          setWeatherData(data.weatherData);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
+        },
+        (error) => {
+          setError(`Error getting location: ${error.message}. Please try again or enter a county manually.`);
         }
-      }, (error) => {
-        setError("Error getting location: " + error.message);
-      });
+      );
     } else {
-      setError("Geolocation is not supported by this browser.");
+      setError("Geolocation is not supported by this browser. Please enter a county manually.");
     }
   };
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
+      const response = await fetch(`http://localhost:3000/api/profile/${userId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch history');
+        throw new Error("Failed to fetch history from server");
       }
       const data = await response.json();
-      setHistory(data);
+      setHistory(data || []);
     } catch (err) {
-      setError(err.message);
+      setError(`Error fetching history: ${err.message}. Please try again.`);
     }
   };
 
@@ -144,7 +148,7 @@ const Dashboard = () => {
           </ul>
         </nav>
         <div className="p-4 border-t border-slate-700">
-          <button 
+          <button
             onClick={handleSignOut}
             className="w-full text-slate-300 hover:text-white text-sm"
           >
@@ -163,10 +167,24 @@ const Dashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Location:
             </label>
-            <Button onClick={getLocationAndAdvice} className="bg-blue-600 hover:bg-blue-700" disabled={loading}>
-              {loading ? 'Loading...' : 'Get My Location and Advice'}
+            <Button
+              onClick={getLocationAndAdvice}
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Get My Location and Advice"}
             </Button>
-            {error && <p className="mt-2 text-red-600">{error}</p>}
+            {error && (
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-red-600">{error}</p>
+                <Button
+                  onClick={() => setError("")}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                >
+                  Clear Error
+                </Button>
+              </div>
+            )}
             {county && <p className="mt-2 text-gray-700">Detected County: {county}</p>}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
