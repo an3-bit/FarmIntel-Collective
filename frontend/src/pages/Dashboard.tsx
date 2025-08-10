@@ -51,7 +51,7 @@ const Dashboard = () => {
         setError("");
 
         try {
-          const response = await fetch('/api/advice', {
+          const response = await fetch('http://localhost:5000/api/advice', { // Adjust URL to match backend
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -60,7 +60,8 @@ const Dashboard = () => {
           });
 
           if (!response.ok) {
-            throw new Error('Failed to fetch advice');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch advice');
           }
 
           const data = await response.json();
@@ -84,7 +85,7 @@ const Dashboard = () => {
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`/api/profile/${userId}`);
+      const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch history');
       }
