@@ -5,9 +5,18 @@ const apiRoutes = require('./routes/api');
 const app = express();
 const PORT = 3000;
 
-app.use(cors()); // Enable CORS for React frontend
+
 app.use(express.json()); // Parse JSON bodies
-app.use('/api', apiRoutes); // Mount API routes
+app.use('/api', apiRoutes); 
+const corsOptions = {
+  origin: [
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
