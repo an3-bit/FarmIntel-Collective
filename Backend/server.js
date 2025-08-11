@@ -54,7 +54,7 @@ app.get('/api/profile/:userId', (req, res) => {
     [userId],
     (err, results) => {
       if (err) {
-        console.error('❌ DB query error:', err);
+        console.error(' DB query error:', err);
         return res.status(500).json({ error: 'Database query error' });
       }
 
