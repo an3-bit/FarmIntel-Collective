@@ -30,6 +30,10 @@ const Dashboard = () => {
   // API hooks
   const adviceApi = useApi<AdviceResponse>();
   const profileApi = useApi<SearchHistoryItem[]>();
+  
+  // API hooks
+  const adviceApi = useApi<AdviceResponse>();
+  const profileApi = useApi<SearchHistoryItem[]>();
 
   const crops = [
     "Maize",
