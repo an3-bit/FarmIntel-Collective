@@ -1,4 +1,8 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
+const { connectDB } = require('./src/config/db');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -18,30 +22,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// MySQL connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: 3306
-});
-
-// Connect to MySQL
-db.connect(err => {
-  if (err) {
-    console.error('❌ MySQL connection error:', err);
-    process.exit(1);
-  }
-  console.log('✅ Connected to MySQL database');
-});
+// Connect to MySQL using Sequelize
+connectDB();
 
 // Import API routes
-const apiRoutes = require('./src/routes/api');
+const apiRoutes = require('./src/routes/adviceRoutes');
 
 // Root route
 app.get('/', (req, res) => {
-  res.send('Backend is running and connected to MySQL');
+  res.send('Backend is running and connected to MySQL via Sequelize');
 });
 
 // Use API routes
