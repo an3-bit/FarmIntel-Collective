@@ -48,9 +48,10 @@ const Dashboard = () => {
 
   const getLocationAndAdvice = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
 
           try {
             const request: AdviceRequest = { lat, lon, crop: selectedCrop, userId };
@@ -73,9 +74,7 @@ const Dashboard = () => {
           console.error('Geolocation error:', error.message);
           // You can add a toast notification here if you want
         }
-      }, (error) => {
-        setError("Error getting location: " + error.message);
-      });
+      );
     } else {
       console.error("Geolocation is not supported by this browser");
       // You can add a toast notification here if you want
