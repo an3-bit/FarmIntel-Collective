@@ -131,3 +131,67 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// New aggregated endpoint: POST /api/get-agri-advice
+exports.getAgriAdvice = async (req, res) => {
+  try {
+    const { location } = req.body || {};
+
+    if (!location || typeof location !== 'string' || !location.trim()) {
+      return res.status(400).json({ error: 'Please provide a valid location string in the request body.' });
+    }
+
+    let GeocoderClient, WeatherClient, SoilClient;
+    try {
+      ({ GeocoderClient, WeatherClient, SoilClient } = require('openepi-client'));
+    } catch (e) {
+      return res.status(500).json({ error: 'Dependency missing: openepi-client is not installed in Backend. Please add it to proceed.' });
+    }
+
+    const geocoder = new GeocoderClient();
+    let geoResult;
+    try {
+      if (typeof geocoder.geocode === 'function') {
+        geoResult = await geocoder.geocode(location);
+      } else if (typeof geocoder.forward === 'function') {
+        geoResult = await geocoder.forward({ query: location });
+      } else {
+        throw new Error('GeocoderClient missing geocode/forward method');
+      }
+    } catch (e) {
+      return res.status(404).json({ error: 'Location not found. Please try a different name.' });
+    }
+
+    const first = Array.isArray(geoResult?.results) ? geoResult.results[0] : (geoResult?.results || geoResult);
+    const name = first?.name || first?.label || first?.formatted || String(location);
+    const latitude = first?.latitude ?? first?.lat ?? first?.coordinates?.lat ?? first?.geometry?.lat;
+    const longitude = first?.longitude ?? first?.lon ?? first?.coordinates?.lon ?? first?.geometry?.lng ?? first?.geometry?.lon;
+
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return res.status(404).json({ error: 'Location not found. Please try a different name.' });
+    }
+
+    const weatherClient = new WeatherClient();
+    const soilClient = new SoilClient();
+
+    const [weatherRes, soilRes] = await Promise.allSettled([
+      typeof weatherClient.getLocationForecast === 'function'
+        ? weatherClient.getLocationForecast({ latitude, longitude, days: 7 })
+        : Promise.reject(new Error('WeatherClient.getLocationForecast not available')),
+      typeof soilClient.getSoilType === 'function'
+        ? soilClient.getSoilType({ latitude, longitude })
+        : Promise.reject(new Error('SoilClient.getSoilType not available')),
+    ]);
+
+    const response = {
+      location: { name, latitude, longitude },
+    };
+
+    response.weather = weatherRes.status === 'fulfilled' ? weatherRes.value : { error: 'Weather data not available for this location currently.' };
+    response.soil = soilRes.status === 'fulfilled' ? soilRes.value : { error: 'Soil data not available for this specific location.' };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    return res.status(500).json({ error: 'Server error', details: err.message });
+  }
+};
