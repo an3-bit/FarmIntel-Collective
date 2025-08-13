@@ -155,15 +155,7 @@ const Dashboard = () => {
         <div className="p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
-          {/* API Connection Status */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-blue-700">
-                Backend API: {API_CONFIG.baseUrl}
-              </span>
-            </div>
-          </div>
+         
 
           {/* Location and Crop Selection Section */}
           <div className="mb-8">
