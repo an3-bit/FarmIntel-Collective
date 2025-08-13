@@ -27,10 +27,7 @@ const Dashboard = () => {
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [userId] = useState("default_user"); // Mock userId, replace with auth system
   
-  // API hooks
-  const adviceApi = useApi<AdviceResponse>();
-  const profileApi = useApi<SearchHistoryItem[]>();
-  
+
   // API hooks
   const adviceApi = useApi<AdviceResponse>();
   const profileApi = useApi<SearchHistoryItem[]>();
@@ -163,7 +160,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
               <span className="text-sm text-blue-700">
-                Backend API: {API_CONFIG.BASE_URL}
+                Backend API: {API_CONFIG.baseUrl}
               </span>
             </div>
           </div>
@@ -182,7 +179,7 @@ const Dashboard = () => {
             </Button>
             {adviceApi.error && (
               <div className="mt-2 flex items-center gap-2">
-                <p className="text-red-600">{adviceApi.error}</p>
+                <p className="text-red-600">{adviceApi.clearError}</p>
                 <Button
                   onClick={adviceApi.clearError}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800"
