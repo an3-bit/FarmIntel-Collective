@@ -2,16 +2,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  LayoutDashboard,
-  BarChart3,
-  FileText,
+import { 
+  LayoutDashboard, 
+  BarChart3, 
+  FileText, 
   Settings,
   CheckCircle,
   AlertTriangle,
   Wrench,
-  History,
+  History
 } from "lucide-react";
+import { SoilAdvisorService, AdviceRequest, AdviceResponse, SearchHistoryItem } from "../services/soilAdvisorService";
+import { useApi } from "../hooks/useApi";
+import { API_CONFIG } from "../config/api";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -19,12 +22,18 @@ const Dashboard = () => {
   const [soilData, setSoilData] = useState({ ph: "", n: "", p: "", k: "" });
   const [recommendations, setRecommendations] = useState({ crop: "", soil: "", weather: "" });
   const [totalRain, setTotalRain] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedCrop, setSelectedCrop] = useState("maize");
   const [weatherData, setWeatherData] = useState({ kakamega: null, siaya: null, nairobi: null });
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<SearchHistoryItem[]>([]);
   const [userId] = useState("default_user"); // Mock userId, replace with auth system
+  
+  // API hooks
+  const adviceApi = useApi<AdviceResponse>();
+  const profileApi = useApi<SearchHistoryItem[]>();
+  
+  // API hooks
+  const adviceApi = useApi<AdviceResponse>();
+  const profileApi = useApi<SearchHistoryItem[]>();
 
   const crops = [
     "Maize",
@@ -34,7 +43,7 @@ const Dashboard = () => {
     "Beans",
     "Peas",
     "Lentils",
-    "Groundnuts",
+    "Groundnuts"
   ];
 
   const handleSignOut = () => {
@@ -48,61 +57,48 @@ const Dashboard = () => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
 
-          setLoading(true);
-          setError("");
-
           try {
-            const response = await fetch("http://localhost:3000/api/advice", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ lat, lon, crop: selectedCrop, userId }),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || "Failed to fetch advice from server");
-            }
-
-            const data = await response.json();
-            // Defensive checks for API response
+            const request: AdviceRequest = { lat, lon, crop: selectedCrop, userId };
+            const data = await SoilAdvisorService.getAdvice(request);
+            
+            // Update state with API response
             setCounty(data.county || "");
             setSoilData(data.soilData || { ph: "", n: "", p: "", k: "" });
             setRecommendations(data.recommendations || { crop: "", soil: "", weather: "" });
             setTotalRain(data.totalRain || 0);
             setWeatherData(data.weatherData || { kakamega: null, siaya: null, nairobi: null });
           } catch (err) {
-            setError(`Error fetching advice: ${err.message}. Please try again.`);
-          } finally {
-            setLoading(false);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+            console.error('Error fetching advice:', errorMessage);
+            // Set error in the API hook for UI display
+            adviceApi.setError(errorMessage);
           }
         },
         (error) => {
-          setError(`Error getting location: ${error.message}. Please try again or enter a county manually.`);
+          console.error('Geolocation error:', error.message);
+          // You can add a toast notification here if you want
         }
       );
     } else {
-      setError("Geolocation is not supported by this browser. Please enter a county manually.");
+      console.error("Geolocation is not supported by this browser");
+      // You can add a toast notification here if you want
     }
   };
 
   const fetchHistory = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/profile/${userId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch history from server");
-      }
-      const data = await response.json();
+      const data = await SoilAdvisorService.getProfile(userId);
       setHistory(data || []);
     } catch (err) {
-      setError(`Error fetching history: ${err.message}. Please try again.`);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('Error fetching history:', errorMessage);
+      // You can add a toast notification here if you want
     }
   };
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [userId]);
 
   return (
     <div className="flex h-screen bg-white">
@@ -148,7 +144,7 @@ const Dashboard = () => {
           </ul>
         </nav>
         <div className="p-4 border-t border-slate-700">
-          <button
+          <button 
             onClick={handleSignOut}
             className="w-full text-slate-300 hover:text-white text-sm"
           >
@@ -162,6 +158,16 @@ const Dashboard = () => {
         <div className="p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
+          {/* API Connection Status */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-blue-700">
+                Backend API: {API_CONFIG.BASE_URL}
+              </span>
+            </div>
+          </div>
+
           {/* Location and Crop Selection Section */}
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -170,15 +176,15 @@ const Dashboard = () => {
             <Button
               onClick={getLocationAndAdvice}
               className="bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
+              disabled={adviceApi.loading}
             >
-              {loading ? "Loading..." : "Get My Location and Advice"}
+              {adviceApi.loading ? "Loading..." : "Get My Location and Advice"}
             </Button>
-            {error && (
+            {adviceApi.error && (
               <div className="mt-2 flex items-center gap-2">
-                <p className="text-red-600">{error}</p>
+                <p className="text-red-600">{adviceApi.error}</p>
                 <Button
-                  onClick={() => setError("")}
+                  onClick={adviceApi.clearError}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800"
                 >
                   Clear Error
@@ -336,24 +342,30 @@ const Dashboard = () => {
               {/* Search History Section */}
               <div className="mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Search History</h2>
-                <div className="space-y-4">
-                  {history.map((item, index) => (
-                    <Card key={index} className="bg-white border border-gray-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <History className="text-blue-600" size={20} />
-                          <div>
-                            <div className="font-medium text-gray-900">County: {item.county}</div>
-                            <div className="text-gray-600">Crop: {item.recommendations_crop}</div>
-                            <div className="text-gray-600">Soil: pH {item.soilData_ph}, N {item.soilData_n}, P {item.soilData_p}, K {item.soilData_k}</div>
-                            <div className="text-gray-600">Recommendation: {item.recommendations_soil}</div>
-                            <div className="text-gray-600">Date: {new Date(item.createdAt).toLocaleString()}</div>
+                {profileApi.loading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Loading history...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                                        {history.map((item, index) => (
+                      <Card key={index} className="bg-white border border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <History className="text-blue-600" size={20} />
+                            <div>
+                              <div className="font-medium text-gray-900">County: {item.county}</div>
+                              <div className="text-gray-600">Crop: {item.recommendations_crop}</div>
+                              <div className="text-gray-600">Soil: pH {item.soilData_ph}, N {item.soilData_n}, P {item.soilData_p}, K {item.soilData_k}</div>
+                              <div className="text-gray-600">Recommendation: {item.recommendations_soil}</div>
+                              <div className="text-gray-600">Date: {new Date(item.createdAt).toLocaleString()}</div>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}

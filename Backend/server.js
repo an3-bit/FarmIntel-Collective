@@ -1,7 +1,12 @@
 require('dotenv').config();
 const express = require('express');
+<<<<<<< HEAD
+const cors = require('cors');
+const { connectDB } = require('./src/config/db');
+=======
 const mysql = require('mysql2');
 const cors = require('cors');
+>>>>>>> d42d0ca22c2eba08a4c6e649b4eba4779ff886a4
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -22,6 +27,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+<<<<<<< HEAD
+// Connect to MySQL using Sequelize
+connectDB();
+
+// Import API routes
+const apiRoutes = require('./src/routes/adviceRoutes');
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('Backend is running and connected to MySQL via Sequelize');
+});
+
+// Use API routes
+app.use('/api', apiRoutes);
+=======
 // MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -66,6 +86,7 @@ app.get('/api/profile/:userId', (req, res) => {
     }
   );
 });
+>>>>>>> d42d0ca22c2eba08a4c6e649b4eba4779ff886a4
 
 // 404 handler
 app.use((req, res) => {
