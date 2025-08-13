@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import LearnMore from "./pages/LearnMore";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import NextSteps from "./pages/NextSteps";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,8 @@ const App = () => (
           <Route path="/signin" element={<SignIn />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/learn-more" element={<LearnMore />} />
+          <Route path="/next-steps" element={<NextSteps data={undefined} locationName={undefined} onBackToDashboard={undefined} />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
