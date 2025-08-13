@@ -144,71 +144,99 @@ const Dashboard = () => {
     }
   };
   const fetchSoilData = async (lat: number, lon: number): Promise<SoilData> => {
-    // Try SoilGrids first
+    // 1. First try SoilGrids with retry logic
     try {
-      const soilGridsResponse = await fetch(
-        `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=phh2o&property=nitrogen&property=phosphorus&property=potassium&depth=0-5cm&value=mean`
+      const soilGridsResponse = await fetchWithRetry(
+        `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=phh2o,nitrogen,phosphorus,potassium&depth=0-5cm&value=mean`,
+        3 // retry 3 times
       );
       
       if (soilGridsResponse.ok) {
         const data = await soilGridsResponse.json();
-        return {
-          ph: data.properties.layers[0].depths[0].values.mean / 10,
-          nitrogen: data.properties.layers[1].depths[0].values.mean,
-          phosphorus: data.properties.layers[2].depths[0].values.mean,
-          potassium: data.properties.layers[3].depths[0].values.mean
-        };
+        if (data.properties?.layers?.length >= 4) {
+          return {
+            ph: data.properties.layers[0].depths[0].values.mean / 10,
+            nitrogen: data.properties.layers[1].depths[0].values.mean,
+            phosphorus: data.properties.layers[2].depths[0].values.mean,
+            potassium: data.properties.layers[3].depths[0].values.mean,
+            
+          };
+        }
       }
     } catch (error) {
-      console.warn("SoilGrids API failed, trying fallback APIs...", error);
+      console.warn("SoilGrids API failed:", error);
     }
   
-    // Try OpenLandMap as first fallback
+    // 2. Try OpenLandMap with correct endpoint
     try {
+      // Correct OpenLandMap endpoint format
       const openLandMapResponse = await fetch(
-        `https://api.openlandmap.org/v1/soil?lat=${lat}&lon=${lon}&properties=ph,nitrogen,phosphorus,potassium`
+        `https://openlandmap.org/api/v1/query?lat=${lat}&lon=${lon}&variables=ph.nitrogen,phosphorus,potassium`
       );
       
       if (openLandMapResponse.ok) {
         const data = await openLandMapResponse.json();
         return {
-          ph: data.properties.ph,
-          nitrogen: data.properties.nitrogen,
-          phosphorus: data.properties.phosphorus,
-          potassium: data.properties.potassium
+          ph: data.properties?.ph?.mean || 6.0,
+          nitrogen: data.properties?.nitrogen?.mean || 40,
+          phosphorus: data.properties?.phosphorus?.mean || 25,
+          potassium: data.properties?.potassium?.mean || 60,
+          
         };
       }
     } catch (error) {
-      console.warn("OpenLandMap API failed, trying FAO...", error);
+      console.warn("OpenLandMap API failed:", error);
     }
   
-    // Try FAO Soils Portal as final fallback
+    // 3. Try alternative soil APIs (HTTPS only)
     try {
+      // Using a proxy for FAO to avoid mixed content issues
       const faoResponse = await fetch(
-        `http://www.fao.org/soils-portal/api/v1/soil?lat=${lat}&lon=${lon}`
+        `https://cors-anywhere.herokuapp.com/https://www.fao.org/soils-portal/api/v1/soil?lat=${lat}&lon=${lon}`,
+        {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        }
       );
       
       if (faoResponse.ok) {
         const data = await faoResponse.json();
         return {
-          ph: data.ph,
-          nitrogen: data.nitrogen,
-          phosphorus: data.phosphorus,
-          potassium: data.potassium
+          ph: data.ph || 6.0,
+          nitrogen: data.nitrogen || 40,
+          phosphorus: data.phosphorus || 25,
+          potassium: data.potassium || 60,
+      
         };
       }
     } catch (error) {
-      console.warn("FAO API failed, using fallback data", error);
+      console.warn("FAO API failed:", error);
     }
   
-    // If all APIs fail, return reasonable fallback data
+    // Fallback data with warning
     console.warn("All soil APIs failed, using fallback data");
     return {
-      ph: 5.8 + Math.random() * 1.4, // Random pH between 5.8-7.2
+      ph: 5.8 + Math.random() * 1.4,
       nitrogen: 30 + Math.random() * 40,
       phosphorus: 20 + Math.random() * 30,
-      potassium: 50 + Math.random() * 50
+      potassium: 50 + Math.random() * 50,
+     
     };
+  };
+  
+  // Helper function for retry logic
+  const fetchWithRetry = async (url: string, retries: number): Promise<Response> => {
+    try {
+      const response = await fetch(url);
+      if (response.ok || retries === 0) return response;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return fetchWithRetry(url, retries - 1);
+    } catch (error) {
+      if (retries === 0) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return fetchWithRetry(url, retries - 1);
+    }
   };
 
   const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherData[]> => {
