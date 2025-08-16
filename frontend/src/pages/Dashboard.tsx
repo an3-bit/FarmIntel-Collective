@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  FileText, 
+import {
+  LayoutDashboard,
+  BarChart3,
+  FileText,
   Settings,
   CheckCircle,
   AlertTriangle,
@@ -14,6 +14,7 @@ import {
   Menu,
   X
 } from "lucide-react";
+
 import { useApi } from "../hooks/useApi";
 
 // Types for our API responses
@@ -40,9 +41,11 @@ interface Recommendations {
   alternativeCrops?: string[];
 }
 
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [county, setCounty] = useState("");
+
   const [soilData, setSoilData] = useState<SoilData>({ 
     ph: 0, 
     nitrogen: 0, 
@@ -59,6 +62,17 @@ const Dashboard = () => {
   const [selectedCrop, setSelectedCrop] = useState("maize");
   const [history, setHistory] = useState<any[]>([]);
   const [userId] = useState("default_user");
+
+  const [soilData, setSoilData] = useState({ ph: "", n: "", p: "", k: "" });
+  const [recommendations, setRecommendations] = useState({ crop: "", soil: "", weather: "" });
+  const [totalRain, setTotalRain] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedCrop, setSelectedCrop] = useState("maize");
+  const [weatherData, setWeatherData] = useState({ kakamega: null, siaya: null, nairobi: null });
+  const [history, setHistory] = useState([]);
+  const [userId] = useState("default_user"); // Mock userId, replace with auth system
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
@@ -75,7 +89,7 @@ const Dashboard = () => {
     "Beans",
     "Peas",
     "Lentils",
-    "Groundnuts"
+    "Groundnuts",
   ];
 
   // Crop requirements (simplified)
@@ -109,7 +123,11 @@ const Dashboard = () => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
 
+          setLoading(true);
+          setError("");
+
           try {
+
             // Fetch soil data from SoilGrids API
             const soilResponse = await fetchSoilData(lat, lon);
             setSoilData(soilResponse);
@@ -236,11 +254,46 @@ const Dashboard = () => {
       if (retries === 0) throw error;
       await new Promise(resolve => setTimeout(resolve, 1000));
       return fetchWithRetry(url, retries - 1);
+
+            const response = await fetch("http://localhost:3000/api/advice", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ lat, lon, crop: selectedCrop, userId }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Failed to fetch advice from server");
+            }
+
+            const data = await response.json();
+            // Defensive checks for API response
+            setCounty(data.county || "");
+            setSoilData(data.soilData || { ph: "", n: "", p: "", k: "" });
+            setRecommendations(data.recommendations || { crop: "", soil: "", weather: "" });
+            setTotalRain(data.totalRain || 0);
+            setWeatherData(data.weatherData || { kakamega: null, siaya: null, nairobi: null });
+          } catch (err) {
+            setError(`Error fetching advice: ${err.message}. Please try again.`);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          setError(`Error getting location: ${error.message}. Please try again or enter a county manually.`);
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser. Please enter a county manually.");
+
     }
   };
 
   const fetchWeatherData = async (lat: number, lon: number): Promise<WeatherData[]> => {
     try {
+
       // Using Open-Meteo API
       const response = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,precipitation_sum&past_days=7`
@@ -363,6 +416,22 @@ const Dashboard = () => {
     setHistory(prev => [newEntry, ...prev.slice(0, 9)]); // Keep last 10 entries
   };
 
+      const response = await fetch(`http://localhost:3000/api/profile/${userId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch history from server");
+      }
+      const data = await response.json();
+      setHistory(data || []);
+    } catch (err) {
+      setError(`Error fetching history: ${err.message}. Please try again.`);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+
   return (
     <div className="flex h-screen bg-white relative">
       {/* Mobile Sidebar Toggle Button */}
@@ -420,7 +489,7 @@ const Dashboard = () => {
           </ul>
         </nav>
         <div className="p-4 border-t border-slate-700">
-          <button 
+          <button
             onClick={handleSignOut}
             className="w-full text-slate-300 hover:text-white text-sm"
           >
@@ -442,15 +511,27 @@ const Dashboard = () => {
             <Button
               onClick={getLocationAndAdvice}
               className="bg-blue-600 hover:bg-blue-700"
+
               disabled={soilApi.loading || weatherApi.loading}
             >
               {soilApi.loading || weatherApi.loading ? "Loading..." : "Get My Location and Advice"}
             </Button>
             {soilApi.error && (
+
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Get My Location and Advice"}
+            </Button>
+            {error && (
+
               <div className="mt-2 flex items-center gap-2">
                 <p className="text-red-600">{soilApi.error.message}</p>
                 <Button
+
                   onClick={soilApi.clearError}
+
+                  onClick={() => setError("")}
+
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800"
                 >
                   Clear Error
