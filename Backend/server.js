@@ -9,7 +9,7 @@ const port = process.env.PORT || 3000;
 // ✅ Add your frontend's origin here
 const corsOptions = {
   origin: [
-    'http://localhost:8084', 
+    'http://localhost:8080', 
     'http://localhost:3000',
     'http://localhost:8000',
   ],
