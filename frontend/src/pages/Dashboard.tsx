@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,16 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Handle window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Fetch advice from backend using geolocation
   const getLocationAndAdvice = () => {
     if (!navigator.geolocation) {
@@ -91,7 +101,7 @@ const Dashboard = () => {
             throw new Error(errData.message || "Failed to fetch advice from server");
           }
           const data = await response.json();
-          setCounty(data.county || "");
+          setCounty(data.county || "Unknown Location");
           const parsedSoilData = {
             ph: Number(data.soilData?.ph) || 0,
             nitrogen: Number(data.soilData?.nitrogen ?? data.soilData?.n) || 0,
@@ -100,41 +110,38 @@ const Dashboard = () => {
           };
           setSoilData(parsedSoilData);
           setRecommendations({
-          crop: data.recommendations?.crop || "",
-          soil: data.recommendations?.soil || "",
-          weather: data.recommendations?.weather || "",
-          alternativeCrops: data.recommendations?.alternativeCrops || [],
-        });
-        setTotalRain(Number(data.totalRain) || 0);
-        // If you want to show weatherData for the detected county, you can extract it here:
-        // Example: setWeatherData(data.weatherData || {});
-        setWeatherForecast([]); // Not provided in your sample, so leave empty or map if available
-        // Parse history if present and convert soil values for each item
-        setHistory(
-          Array.isArray(data.history)
-            ? data.history.map((item) => ({
-                ...item,
-                soilData: {
-                  ph: Number(item.soilData?.ph) || 0,
-                  nitrogen: Number(item.soilData?.nitrogen ?? item.soilData?.n) || 0,
-                  phosphorus: Number(item.soilData?.phosphorus ?? item.soilData?.p) || 0,
-                  potassium: Number(item.soilData?.potassium ?? item.soilData?.k) || 0,
-                },
-              }))
-            : []
-        );
-      } catch (err: any) {
-        setError(`Error fetching advice: ${err.message}. Please try again.`);
-      } finally {
+            crop: data.recommendations?.crop || "",
+            soil: data.recommendations?.soil || "",
+            weather: data.recommendations?.weather || "",
+            alternativeCrops: data.recommendations?.alternativeCrops || [],
+          });
+          setTotalRain(Number(data.totalRain) || 0);
+          setWeatherForecast(data.weatherForecast || []); // Expecting array of WeatherData
+          setHistory(
+            Array.isArray(data.history)
+              ? data.history.map((item) => ({
+                  ...item,
+                  soilData: {
+                    ph: Number(item.soilData?.ph) || 0,
+                    nitrogen: Number(item.soilData?.nitrogen ?? item.soilData?.n) || 0,
+                    phosphorus: Number(item.soilData?.phosphorus ?? item.soilData?.p) || 0,
+                    potassium: Number(item.soilData?.potassium ?? item.soilData?.k) || 0,
+                  },
+                }))
+              : []
+          );
+        } catch (err: any) {
+          setError(`Error fetching advice: ${err.message}. Please try again.`);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (geoError) => {
+        setError(`Error getting location: ${geoError.message}. Please try again or enter a county manually.`);
         setLoading(false);
       }
-    },
-    (geoError) => {
-      setError(`Error getting location: ${geoError.message}. Please try again or enter a county manually.`);
-      setLoading(false);
-    }
-  );
-};
+    );
+  };
 
   // Dummy sign out handler
   const handleSignOut = () => {
@@ -142,12 +149,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white relative">
+    <div className="flex min-h-screen bg-white relative">
       {/* Mobile Sidebar Toggle Button */}
       {isMobile && (
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-4 left-4 z-50 p-2 rounded-md bg-slate-800 text-white"
+          className="fixed top-4 left-4 z-50 p-2 rounded-md bg-slate-800 text-white md:hidden"
         >
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -155,8 +162,8 @@ const Dashboard = () => {
 
       {/* Dark Sidebar */}
       <div
-        className={`w-64 bg-slate-800 text-white flex flex-col fixed md:relative h-full transition-all duration-300 z-40
-          ${sidebarOpen ? 'left-0' : '-left-64 md:left-0'}`}
+        className={`w-64 bg-slate-800 text-white flex flex-col fixed md:static h-full transition-all duration-300 z-40
+          ${isMobile ? (sidebarOpen ? 'left-0' : '-left-64') : 'left-0'}`}
       >
         <div className="p-6 border-b border-slate-700">
           <h1 className="text-sm font-semibold tracking-wide">
@@ -208,41 +215,50 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen && isMobile ? 'ml-64' : ''}`}>
-        <div className="p-4 md:p-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8 text-center">Dashboard</h1>
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${isMobile && sidebarOpen ? 'ml-64' : ''}`}>
+        <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 md:mb-8 text-center">Dashboard</h1>
 
           {/* Location and Crop Selection Section */}
           <div className="mb-6 md:mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Location:
-            </label>
-            <Button
-              onClick={getLocationAndAdvice}
-              className="bg-blue-600 hover:bg-blue-700"
-              disabled={loading}
-            >
-              {loading ? "Loading..." : "Get My Location and Advice"}
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+              <div className="mb-4 sm:mb-0">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location:
+                </label>
+                <Button
+                  onClick={getLocationAndAdvice}
+                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                  disabled={loading}
+                >
+                  {loading ? "Loading..." : "Get My Location and Advice"}
+                </Button>
+              </div>
+              {county && (
+                <div className="text-sm text-gray-600">
+                  Detected Location: <span className="font-medium">{county}</span>
+                </div>
+              )}
+            </div>
             {error && (
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-2">
                 <p className="text-red-600">{error}</p>
                 <Button
                   onClick={() => setError("")}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 mt-2 sm:mt-0"
                 >
                   Clear Error
                 </Button>
               </div>
             )}
-            {/* Weather data for county is not available directly; handled in weatherForecast section below */}
+            <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Crop:
               </label>
               <select
                 value={selectedCrop}
                 onChange={(e) => setSelectedCrop(e.target.value)}
-                className="p-2 border border-gray-300 rounded-md w-full md:w-auto"
+                className="p-2 border border-gray-300 rounded-md w-full sm:w-48"
               >
                 {crops.map((crop) => (
                   <option key={crop} value={crop.toLowerCase()}>
@@ -258,7 +274,7 @@ const Dashboard = () => {
               {/* Soil Data Section */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Soil Data</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="bg-white border border-gray-200">
                     <CardContent className="p-4">
                       <div className="text-sm text-gray-600">pH</div>
@@ -297,8 +313,8 @@ const Dashboard = () => {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Crop Recommendations</h2>
                 <Card className="bg-white border border-gray-200">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="text-green-600" size={20} />
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="text-green-600 flex-shrink-0" size={20} />
                       <div>
                         <div className="font-medium text-gray-900">{recommendations.crop}</div>
                         <div className="text-gray-600 mt-1">{recommendations.soil}</div>
@@ -321,18 +337,19 @@ const Dashboard = () => {
               {/* Weather Summary Section */}
               <div className="mt-6 md:mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">7-Day Weather Forecast</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {weatherForecast.slice(0, 7).map((day, index) => (
                     <Card key={index} className="bg-white border border-gray-200">
                       <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <AlertTriangle className="text-blue-600" size={20} />
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="text-blue-600 flex-shrink-0" size={20} />
                           <div>
                             <div className="font-medium text-gray-900">
-                              Day {index + 1}: {new Date(day.date).toLocaleDateString()}
+                              {new Date(day.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                             </div>
-                            <div className="text-gray-600">Temperature: {day.temperature}°C</div>
+                            <div className="text-gray-600 mt-1">Temperature: {day.temperature}°C</div>
                             <div className="text-gray-600">Rainfall: {day.rainfall} mm</div>
+                            <div className="text-gray-600">Humidity: {day.humidity}%</div>
                             <div className="text-gray-600">Conditions: {day.forecast}</div>
                           </div>
                         </div>
@@ -342,8 +359,8 @@ const Dashboard = () => {
                 </div>
                 <Card className="bg-white border border-gray-200 mt-4">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="text-red-600" size={20} />
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="text-red-600 flex-shrink-0" size={20} />
                       <div>
                         <div className="font-medium text-gray-900">Weather Advisory</div>
                         <div className="text-gray-600">{recommendations.weather}</div>
@@ -361,8 +378,8 @@ const Dashboard = () => {
                     {history.map((item, index) => (
                       <Card key={index} className="bg-white border border-gray-200">
                         <CardContent className="p-4">
-                          <div className="flex items-center gap-3">
-                            <History className="text-blue-600" size={20} />
+                          <div className="flex items-start gap-3">
+                            <History className="text-blue-600 flex-shrink-0" size={20} />
                             <div>
                               <div className="font-medium text-gray-900">
                                 {item.county} - {item.crop} - {new Date(item.createdAt).toLocaleString()}
@@ -383,6 +400,7 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+    </div>
   );
 };
 
