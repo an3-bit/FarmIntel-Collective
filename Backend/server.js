@@ -1,46 +1,43 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { connectDB } = require('./src/config/db');
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// ✅ Add your frontend's origin here
-const corsOptions = {
-  origin: [
-    'http://localhost:8080', 
-    'http://localhost:3000',
-    'http://localhost:8000',
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+// Allow your frontend's origin
+app.use(cors({
+  origin: "https://8080-firebase-farmintel-1754904703142.cluster-fbfjltn375c6wqxlhoehbz44sk.cloudworkstations.dev"
+}));
 
-// ✅ Enable CORS for all routes
-app.use(cors(corsOptions));
+// Parse JSON bodies
 app.use(express.json());
 
-// Connect to MySQL using Sequelize
-connectDB();
+// Proxy for OpenEPI requests
+app.post("/proxy", async (req, res) => {
+  try {
+    const { url, method = "GET", headers = {}, body } = req.body;
 
-// Import API routes
-const apiRoutes = require('./src/routes/adviceRoutes');
+    // Call OpenEPI API from server (no CORS restrictions here)
+    const response = await fetch(url, {
+      method,
+      headers: {
+        ...headers,
+        // Make sure we forward correct content type
+        "Content-Type": headers["Content-Type"] || "application/json"
+      },
+      body: method !== "GET" ? JSON.stringify(body) : undefined
+    });
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('Backend is running and connected to MySQL via Sequelize');
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error("Proxy error:", error);
+    res.status(500).json({ error: "Proxy request failed" });
+  }
 });
 
-// Use API routes
-app.use('/api', apiRoutes);
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Proxy server running on port ${PORT}`);
 });

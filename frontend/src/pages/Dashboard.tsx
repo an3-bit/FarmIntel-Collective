@@ -11,6 +11,8 @@ import {
   AlertTriangle,
   Wrench,
   History,
+  Menu,
+  X
 } from "lucide-react";
 
 const Dashboard = () => {
@@ -25,6 +27,12 @@ const Dashboard = () => {
   const [weatherData, setWeatherData] = useState({ kakamega: null, siaya: null, nairobi: null });
   const [history, setHistory] = useState([]);
   const [userId] = useState("default_user"); // Mock userId, replace with auth system
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // API hooks
+  const adviceApi = useApi<AdviceResponse>();
+  const profileApi = useApi<SearchHistoryItem[]>();
 
   const crops = [
     "Maize",
@@ -36,6 +44,18 @@ const Dashboard = () => {
     "Lentils",
     "Groundnuts",
   ];
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSignOut = () => {
     navigate("/");
@@ -105,9 +125,22 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white relative">
+      {/* Mobile Sidebar Toggle Button */}
+      {isMobile && (
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-4 left-4 z-50 p-2 rounded-md bg-slate-800 text-white"
+        >
+          {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      )}
+
       {/* Dark Sidebar */}
-      <div className="w-64 bg-slate-800 text-white flex flex-col">
+      <div 
+        className={`w-64 bg-slate-800 text-white flex flex-col fixed md:relative h-full transition-all duration-300 z-40
+          ${sidebarOpen ? 'left-0' : '-left-64 md:left-0'}`}
+      >
         <div className="p-6 border-b border-slate-700">
           <h1 className="text-sm font-semibold tracking-wide">
             CLIMATE-SMART SOIL ADVISOR
@@ -158,12 +191,12 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen && isMobile ? 'ml-64' : ''}`}>
+        <div className="p-4 md:p-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8 text-center">Dashboard</h1>
 
           {/* Location and Crop Selection Section */}
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Location:
             </label>
@@ -176,7 +209,7 @@ const Dashboard = () => {
             </Button>
             {error && (
               <div className="mt-2 flex items-center gap-2">
-                <p className="text-red-600">{error}</p>
+                <p className="text-red-600">{adviceApi.error.message}</p>
                 <Button
                   onClick={() => setError("")}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800"
@@ -193,7 +226,7 @@ const Dashboard = () => {
               <select
                 value={selectedCrop}
                 onChange={(e) => setSelectedCrop(e.target.value)}
-                className="p-2 border border-gray-300 rounded-md"
+                className="p-2 border border-gray-300 rounded-md w-full md:w-auto"
               >
                 {crops.map((crop) => (
                   <option key={crop} value={crop.toLowerCase()}>
@@ -209,7 +242,7 @@ const Dashboard = () => {
               {/* Soil Data Section */}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Soil Data</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Card className="bg-white border border-gray-200">
                     <CardContent className="p-4">
                       <div className="text-sm text-gray-600">pH</div>
@@ -238,7 +271,7 @@ const Dashboard = () => {
               </div>
 
               {/* Crop to Plant Section */}
-              <div className="mt-8">
+              <div className="mt-6 md:mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Crop Recommendations</h2>
                 <Card className="bg-white border border-gray-200">
                   <CardContent className="p-4">
@@ -253,7 +286,7 @@ const Dashboard = () => {
               </div>
 
               {/* Weather Summary Section */}
-              <div className="mt-8">
+              <div className="mt-6 md:mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Weather Summary (Last 7 Days)</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {weatherData.kakamega && (
@@ -319,7 +352,7 @@ const Dashboard = () => {
               </div>
 
               {/* Soil Improvement Section */}
-              <div className="mt-8">
+              <div className="mt-6 md:mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Soil Improvement</h2>
                 <Card className="bg-white border border-gray-200 max-w-md">
                   <CardContent className="p-4">
@@ -334,26 +367,32 @@ const Dashboard = () => {
               </div>
 
               {/* Search History Section */}
-              <div className="mt-8">
+              <div className="mt-6 md:mt-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Search History</h2>
-                <div className="space-y-4">
-                  {history.map((item, index) => (
-                    <Card key={index} className="bg-white border border-gray-200">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <History className="text-blue-600" size={20} />
-                          <div>
-                            <div className="font-medium text-gray-900">County: {item.county}</div>
-                            <div className="text-gray-600">Crop: {item.recommendations_crop}</div>
-                            <div className="text-gray-600">Soil: pH {item.soilData_ph}, N {item.soilData_n}, P {item.soilData_p}, K {item.soilData_k}</div>
-                            <div className="text-gray-600">Recommendation: {item.recommendations_soil}</div>
-                            <div className="text-gray-600">Date: {new Date(item.createdAt).toLocaleString()}</div>
+                {profileApi.loading ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Loading history...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {history.map((item, index) => (
+                      <Card key={index} className="bg-white border border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <History className="text-blue-600" size={20} />
+                            <div>
+                              <div className="font-medium text-gray-900">County: {item.county}</div>
+                              <div className="text-gray-600">Crop: {item.recommendations_crop}</div>
+                              <div className="text-gray-600">Soil: pH {item.soilData_ph}, N {item.soilData_n}, P {item.soilData_p}, K {item.soilData_k}</div>
+                              <div className="text-gray-600">Recommendation: {item.recommendations_soil}</div>
+                              <div className="text-gray-600">Date: {new Date(item.createdAt).toLocaleString()}</div>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
