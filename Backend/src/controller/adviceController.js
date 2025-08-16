@@ -59,8 +59,10 @@ exports.getAdvice = async (req, res) => {
     if (predictedK < 30) recommendations.soil += 'Use Muriate of Potash (high potassium) to address potassium deficiency. ';
 
     // Fetch weather data from OpenWeatherMap (if API key is available)
-    const weatherApiKey = process.env.OPENWEATHER_API_KEY;
+    const weatherApiKey = process.env.OPENWEATHER_API_KEY || '5d918c233b784255aab124619251608';
     const weatherData = {};
+
+    console.log(weatherApiKey ? 'Fetching weather data...' : 'No OpenWeather API key provided, skipping weather data fetch.');
     
     if (weatherApiKey) {
       const cities = [
@@ -70,46 +72,26 @@ exports.getAdvice = async (req, res) => {
       ];
 
       for (const city of cities) {
-        try {
-          const response = await axios.get(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${city.lat}&lon=${city.lon}&appid=${weatherApiKey}&units=metric`
-          );
-          weatherData[city.name.toLowerCase()] = {
-            temperature: `${response.data.main.temp}°C`,
-            rainfall: response.data.rain ? `${response.data.rain['1h'] || 0} mm` : '0 mm',
-            humidity: `${response.data.main.humidity}%`,
-            forecast: response.data.weather[0].description,
-          };
-        } catch (error) {
-          console.error(`Error fetching weather for ${city.name}:`, error.message);
-          weatherData[city.name.toLowerCase()] = {
-            temperature: 'N/A',
-            rainfall: 'N/A',
-            humidity: 'N/A',
-            forecast: 'Weather data unavailable',
-          };
-        }
-      }
-    } else {
-      // Mock weather data if no API key
-      weatherData.kakamega = {
-        temperature: '25°C',
-        rainfall: '5 mm',
-        humidity: '65%',
-        forecast: 'Partly cloudy',
-      };
-      weatherData.siaya = {
-        temperature: '27°C',
-        rainfall: '3 mm',
-        humidity: '70%',
-        forecast: 'Sunny',
-      };
-      weatherData.nairobi = {
-        temperature: '22°C',
-        rainfall: '8 mm',
-        humidity: '60%',
-        forecast: 'Light rain',
-      };
+  try {
+    const response = await axios.get(
+      `https://api.weatherapi.com/v1/current.json?key=${weatherApiKey}&q=${city.lat},${city.lon}`
+    );
+    weatherData[city.name.toLowerCase()] = {
+      temperature: `${response.data.current.temp_c}°C`,
+      rainfall: response.data.current.precip_mm !== undefined ? `${response.data.current.precip_mm} mm` : '0 mm',
+      humidity: `${response.data.current.humidity}%`,
+      forecast: response.data.current.condition.text,
+    };
+  } catch (error) {
+    console.log(`Error fetching weather for ${city.name}:`, error.message);
+    weatherData[city.name.toLowerCase()] = {
+      temperature: 'N/A',
+      rainfall: 'N/A',
+      humidity: 'N/A',
+      forecast: 'Weather data unavailable',
+    };
+  }
+}
     }
 
     const adviceData = {
